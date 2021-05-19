@@ -1,17 +1,28 @@
 package com.example.springsecurityjpa.SecurityConfigurations
 
+import com.example.springsecurityjpa.Models.SystemUsers
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import java.util.*
+import java.util.stream.Collectors
 
 class MyUserDetails:UserDetails {
-    val userName:String;
-    constructor(_userName:String){
-        this.userName = _userName;
+    var userName:String;
+    var _password:String;
+    var active:Boolean;
+    var authorities:List<GrantedAuthority>;
+
+    constructor(user:SystemUsers){
+        this.userName = user.userName;
+        this._password = user.password;
+        this.active = user.active;
+        this.authorities = Arrays.stream(user.roles.split(',').toTypedArray())
+                                  .map((::SimpleGrantedAuthority))
+                                  .collect(Collectors.toList());
     }
-    override fun getAuthorities(): MutableCollection<out GrantedAuthority> {
-      return Arrays.asList(SimpleGrantedAuthority("ROLE_USER"))
+    override fun getAuthorities():Collection<out GrantedAuthority> {
+      return this.authorities;
     }
 
     override fun getPassword(): String {
@@ -35,6 +46,6 @@ class MyUserDetails:UserDetails {
     }
 
     override fun isEnabled(): Boolean {
-       return true;
+       return this.active;
     }
 }
